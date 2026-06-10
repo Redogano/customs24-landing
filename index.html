@@ -191,15 +191,7 @@
       50%     { opacity: 0.58; }
     }
 
-    /* dark scrim behind the wordmark so it reads on any video frame */
-    .logo-wrap::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 80% 65% at 50% 48%, rgba(0,0,0,0.42) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
+    /* dark scrim removed */
 
     .logo-aura {
       position: absolute;
@@ -318,9 +310,9 @@
                                         drop-shadow(0 0 35px rgba(0,172,193,0.55)); }
       54%    { filter: brightness(1.1) drop-shadow(0 0  6px rgba(255,255,255,0.20)); }
       /* 24 MEGA FLASH — bigger than CUSTOMS */
-      55.1%  { filter: brightness(6.0) drop-shadow(0 0 45px rgba(255,255,255,1.0))
-                                        drop-shadow(0 0 90px rgba(0,172,193,1.0))
-                                        drop-shadow(0 0 130px rgba(255,210,0,0.65)); }
+      55.1%  { filter: brightness(2.8) drop-shadow(0 0 35px rgba(255,255,255,0.95))
+                                        drop-shadow(0 0 70px rgba(0,172,193,0.90))
+                                        drop-shadow(0 0 100px rgba(255,210,0,0.55)); }
       /* warm bloom settle */
       64%    { filter: brightness(1.6) drop-shadow(0 0 18px rgba(0,172,193,0.75))
                                         drop-shadow(0 0 36px rgba(255,200,0,0.28)); }
@@ -369,7 +361,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.55)) drop-shadow(0 0 10px rgba(0,172,193,0.65));
     }
 
     .mark-4 {
@@ -377,7 +368,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.55)) drop-shadow(0 0 10px rgba(255,160,0,0.55));
     }
 
     .logo-rule {
