@@ -940,11 +940,18 @@
 
     /* ── Responsive ── */
 
-    /* Touch devices: hide custom cursor, restore native */
+    /* Touch devices: hide custom cursor, restore native, reduce GPU load */
     @media (hover: none) and (pointer: coarse) {
       .cursor, .cursor-dot { display: none; }
       body { cursor: auto; }
       .link-btn, .soc-btn, .lang-btn { cursor: pointer; }
+      /* Riduce backdrop-filter su mobile (molto pesante su GPU mobile) */
+      .link-btn { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+      .loc-chip  { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+      .lang-toggle { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+      /* Disabilita animazioni pesanti su mobile */
+      .logo-dots { display: none; }
+      .logo-aura { filter: blur(18px); animation: none; opacity: 0.4; }
     }
 
     /* XS — very small phones (≤ 374px, e.g. iPhone SE 1st gen) */
@@ -1055,22 +1062,22 @@
     <video id="vidB" muted playsinline preload="auto" style="opacity:0">
       <source src="23008-332257750_medium.mp4" type="video/mp4">
     </video>
-    <video id="vidTR" muted playsinline preload="auto" loop>
+    <video id="vidTR" muted playsinline preload="none" loop>
       <source src="TR.mp4" type="video/mp4">
     </video>
-    <video id="vidIT" muted playsinline preload="auto" loop>
+    <video id="vidIT" muted playsinline preload="none" loop>
       <source src="IT.mp4" type="video/mp4">
     </video>
-    <video id="vidDE" muted playsinline preload="auto" loop>
+    <video id="vidDE" muted playsinline preload="none" loop>
       <source src="DE.mp4" type="video/mp4">
     </video>
-    <video id="vidEU" muted playsinline preload="auto" loop>
+    <video id="vidEU" muted playsinline preload="none" loop>
       <source src="EU.mp4" type="video/mp4">
     </video>
-    <video id="vidGB" muted playsinline preload="auto" loop>
+    <video id="vidGB" muted playsinline preload="none" loop>
       <source src="GREAT BRITAIN.mp4" type="video/mp4">
     </video>
-    <video id="vidExport" muted playsinline preload="auto" loop>
+    <video id="vidExport" muted playsinline preload="none" loop>
       <source src="Export.mp4" type="video/mp4">
     </video>
     <div class="overlay"></div>
@@ -1438,29 +1445,34 @@
     const vidEU = document.getElementById('vidEU');
     const vidGB = document.getElementById('vidGB');
     const vidExport = document.getElementById('vidExport');
-    makeHoverVid(vidTR, document.querySelector('.btn-turkey'), 'tr-on');
-    makeHoverVid(vidIT, document.querySelector('.btn-italy'),  'it-on');
-    makeHoverVid(vidEU, document.querySelector('.btn-cbam'),   'eu-on');
-    makeHoverVid(vidGB, document.querySelector('.btn-importuk'), 'gb-on');
-    makeHoverVid(vidExport, document.querySelector('.btn-export'), 'export-on');
-    // DE shared between Verzollung + Import
-    let deCount = 0;
-    [document.querySelector('.btn-verzollung'), document.querySelector('.btn-import')].forEach(btn => {
-      btn.addEventListener('mouseenter', () => {
-        deCount++;
-        vidDE.currentTime = 0; applyRate(vidDE); vidDE.play().catch(() => {});
-        vidDE.classList.add('de-on');
+
+    // Hover videos only on non-touch devices (desktop/laptop with real hover)
+    const hasHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (hasHover) {
+      makeHoverVid(vidTR, document.querySelector('.btn-turkey'), 'tr-on');
+      makeHoverVid(vidIT, document.querySelector('.btn-italy'),  'it-on');
+      makeHoverVid(vidEU, document.querySelector('.btn-cbam'),   'eu-on');
+      makeHoverVid(vidGB, document.querySelector('.btn-importuk'), 'gb-on');
+      makeHoverVid(vidExport, document.querySelector('.btn-export'), 'export-on');
+      // DE shared between Verzollung + Import
+      let deCount = 0;
+      [document.querySelector('.btn-verzollung'), document.querySelector('.btn-import')].forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+          deCount++;
+          vidDE.currentTime = 0; applyRate(vidDE); vidDE.play().catch(() => {});
+          vidDE.classList.add('de-on');
+        });
+        btn.addEventListener('mouseleave', () => {
+          deCount = Math.max(0, deCount - 1);
+          if (deCount === 0) {
+            vidDE.classList.remove('de-on');
+            vidDE.addEventListener('transitionend', () => {
+              if (!vidDE.classList.contains('de-on')) { vidDE.pause(); vidDE.currentTime = 0; }
+            }, { once: true });
+          }
+        });
       });
-      btn.addEventListener('mouseleave', () => {
-        deCount = Math.max(0, deCount - 1);
-        if (deCount === 0) {
-          vidDE.classList.remove('de-on');
-          vidDE.addEventListener('transitionend', () => {
-            if (!vidDE.classList.contains('de-on')) { vidDE.pause(); vidDE.currentTime = 0; }
-          }, { once: true });
-        }
-      });
-    });
+    }
 
     // ── Custom Cursor ──
     const cur = document.getElementById('cursor');
