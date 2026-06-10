@@ -943,11 +943,23 @@
     /* Touch devices: hide custom cursor, restore native, reduce GPU load */
     @media (hover: none) and (pointer: coarse) {
       .cursor, .cursor-dot { display: none; }
-      body { cursor: auto; }
+      body {
+        cursor: auto;
+        /* Sfondo statico al posto dei video — risparmia ~50MB di memoria */
+        background: linear-gradient(160deg,
+          #010c1e 0%,
+          #021228 25%,
+          #031630 55%,
+          #020e22 80%,
+          #010b1c 100%);
+      }
+      /* Nascondi video sfondo: zero decodifica video su mobile */
+      #vidA, #vidB { display: none; }
+      #particles   { display: none; }
       .link-btn, .soc-btn, .lang-btn { cursor: pointer; }
       /* Riduce backdrop-filter su mobile (molto pesante su GPU mobile) */
-      .link-btn { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-      .loc-chip  { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+      .link-btn    { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+      .loc-chip    { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
       .lang-toggle { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
       /* Disabilita animazioni pesanti su mobile */
       .logo-dots { display: none; }
@@ -978,14 +990,34 @@
 
     /* SM — standard phones (375px – 479px) */
     @media (min-width: 375px) and (max-width: 479px) {
-      .page      { padding: 14px 12px 12px; }
-      .socials    { gap: 14px; }
-      .logo-wrap { padding: 10px 0 7px; }
-      .card      { gap: 5px; }
-      .services  { gap: 5px; }
-      .link-btn  { padding: 8px 11px 8px 14px; gap: 10px; }
-      .btn-icon  { width: 34px; height: 34px; font-size: 13px; }
-      .soc-icon  { width: 46px; height: 46px; font-size: 18px; }
+      .page      { padding: 10px 11px 9px; }
+      .socials   { gap: 12px; }
+      .logo-wrap { padding: 5px 0 4px; }
+      .card      { gap: 3px; }
+      .services  { gap: 3px; }
+      .logo-mark { font-size: clamp(38px, 11vw, 48px); letter-spacing: -1.5px; }
+      .tagline   { font-size: 8px; letter-spacing: 3px; }
+      .link-btn  { padding: 7px 10px 7px 12px; gap: 9px; }
+      .btn-title { font-size: 13.5px; }
+      .btn-sub   { font-size: 9.5px; }
+      .btn-icon  { width: 32px; height: 32px; font-size: 12px; border-radius: 9px; }
+      .btn-arrow { width: 22px; height: 22px; font-size: 9px; border-radius: 7px; }
+      .soc-icon  { width: 44px; height: 44px; font-size: 17px; }
+      .soc-label { font-size: 8px; }
+      .locs-grid { gap: 4px; }
+      .loc-chip  { padding: 6px 8px; }
+      .loc-co    { font-size: 9px; }
+      .loc-city  { font-size: 7.5px; }
+      .sec-label { font-size: 9px; }
+      .footer    { font-size: 9px; }
+    }
+
+    /* Telefoni piccoli con altezza limitata — nasconde btn-sub per recuperare spazio */
+    @media (max-height: 750px) and (max-width: 479px) {
+      .btn-sub { display: none; }
+      .logo-wrap { padding: 4px 0 3px; }
+      .card   { gap: 2px; }
+      .services { gap: 2px; }
     }
 
     /* MD — large phones / phablets (480px – 767px) */
@@ -1587,64 +1619,66 @@
       });
     });
 
-    // ── Particles ──
-    const canvas = document.getElementById('particles');
-    const ctx    = canvas.getContext('2d');
-    let W, H;
-    const pts = [];
+    // ── Particles (desktop only — nessun rAF loop su mobile) ──
+    if (hasHover) {
+      const canvas = document.getElementById('particles');
+      const ctx    = canvas.getContext('2d');
+      let W, H;
+      const pts = [];
 
-    function resize() {
-      const dpr = window.devicePixelRatio || 1;
-      W = window.innerWidth;
-      H = window.innerHeight;
-      canvas.width  = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
-      canvas.style.width  = W + 'px';
-      canvas.style.height = H + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width  = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        canvas.style.width  = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const COLS = ['255,255,255','255,255,255','255,255,255','0,172,193','255,152,0'];
+
+      class P {
+        constructor(seed) { this.reset(seed); }
+        reset(seed) {
+          this.x   = Math.random() * W;
+          this.y   = seed ? Math.random() * H : H + 10;
+          this.r   = Math.random() * 1.8 + 0.3;
+          this.vy  = -(Math.random() * 0.42 + 0.08);
+          this.vx  = (Math.random() - 0.5) * 0.20;
+          this.col = COLS[Math.floor(Math.random() * COLS.length)];
+          this.a   = Math.random() * 0.38 + 0.06;
+          this.t   = 0;
+          this.max = Math.random() * 400 + 160;
+        }
+        tick() {
+          this.x += this.vx; this.y += this.vy; this.t++;
+          if (this.t > this.max || this.y < -10) this.reset(false);
+        }
+        draw() {
+          const f = Math.min(this.t/55,1) * Math.min((this.max-this.t)/55,1);
+          ctx.save();
+          ctx.globalAlpha = this.a * f;
+          if (this.col !== '255,255,255') { ctx.shadowBlur = 7; ctx.shadowColor = `rgba(${this.col},0.8)`; }
+          ctx.fillStyle = `rgba(${this.col},1)`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      for (let i = 0; i < 68; i++) pts.push(new P(true));
+
+      (function frame() {
+        ctx.clearRect(0, 0, W, H);
+        pts.forEach(p => { p.tick(); p.draw(); });
+        requestAnimationFrame(frame);
+      })();
     }
-    resize();
-    window.addEventListener('resize', resize);
-
-    const COLS = ['255,255,255','255,255,255','255,255,255','0,172,193','255,152,0'];
-
-    class P {
-      constructor(seed) { this.reset(seed); }
-      reset(seed) {
-        this.x   = Math.random() * W;
-        this.y   = seed ? Math.random() * H : H + 10;
-        this.r   = Math.random() * 1.8 + 0.3;
-        this.vy  = -(Math.random() * 0.42 + 0.08);
-        this.vx  = (Math.random() - 0.5) * 0.20;
-        this.col = COLS[Math.floor(Math.random() * COLS.length)];
-        this.a   = Math.random() * 0.38 + 0.06;
-        this.t   = 0;
-        this.max = Math.random() * 400 + 160;
-      }
-      tick() {
-        this.x += this.vx; this.y += this.vy; this.t++;
-        if (this.t > this.max || this.y < -10) this.reset(false);
-      }
-      draw() {
-        const f = Math.min(this.t/55,1) * Math.min((this.max-this.t)/55,1);
-        ctx.save();
-        ctx.globalAlpha = this.a * f;
-        if (this.col !== '255,255,255') { ctx.shadowBlur = 7; ctx.shadowColor = `rgba(${this.col},0.8)`; }
-        ctx.fillStyle = `rgba(${this.col},1)`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    for (let i = 0; i < 68; i++) pts.push(new P(true));
-
-    (function frame() {
-      ctx.clearRect(0, 0, W, H);
-      pts.forEach(p => { p.tick(); p.draw(); });
-      requestAnimationFrame(frame);
-    })();
   </script>
 
 </body>
